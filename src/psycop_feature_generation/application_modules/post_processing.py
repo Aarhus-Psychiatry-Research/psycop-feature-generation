@@ -52,7 +52,6 @@ class PostProcess:
         ].index.tolist()
         log.debug(f"High missingness features: {features_to_drop}")
         return features_to_drop
-        
 
     @staticmethod
     def _remove_outside_age_boundary(
@@ -82,17 +81,23 @@ class PostProcess:
             "age_boundary": self._remove_outside_age_boundary,
         }
 
-    def _load_predictors_from_split(self, path: Path) -> pd.DataFrame:
+    def _load_split(self, path: Path) -> pd.DataFrame:
         """Loads the predictors from a given path."""
         df = pd.read_parquet(path)
-        # only keep predictors
-        df = df.loc[:, df.columns.str.startswith(self.project_info.prefix.predictor + "_")]
         return df
 
-    def _load_training_data(self) -> pd.DataFrame:
+    def _extract_predictors(self, df):
+        """Extracts the predictors from a dataframe."""
+        df = df.loc[
+            :, df.columns.str.startswith(self.project_info.prefix.predictor + "_")
+        ]
+        return df
+
+    def _load_training_predictors(self) -> pd.DataFrame:
         """Loads the predictors from the training data."""
         train_path = list(self.project_info.feature_set_path.glob("*train*"))[0]
-        return self._load_predictors_from_split(train_path)
+        df = self._load_split(train_path)
+        return self._extract_predictors(df)
 
     def process(
         self,
@@ -113,13 +118,13 @@ class PostProcess:
         """
         log.info("–––––––– Post processing ––––––––")
         log.info(f"Applying processors: {processors} with thresholds: {thresholds}")
-        train_df = self._load_training_data()
+        train_predictors = self._load_training_predictors()
 
         # identify features to remove based on train set
         self.identify_features_to_drop(
             processors=processors,
             thresholds=thresholds,
-            train_df=train_df,
+            train_df=train_predictors,
         )
 
         log.info(
@@ -132,9 +137,7 @@ class PostProcess:
 
     def identify_features_to_drop(
         self,
-        processors: Iterable[
-            Literal["zero_variance", "missingness", "age_boundary"]
-        ],
+        processors: Iterable[Literal["zero_variance", "missingness", "age_boundary"]],
         thresholds: PostProcessingArguments,
         train_df: pd.DataFrame,
     ) -> None:
@@ -151,13 +154,13 @@ class PostProcess:
         for processor in processors:
             if processor == "age_boundary":
                 continue
-            self.features_to_drop.extend(self.processors[processor](train_df, thresholds))
+            self.features_to_drop.extend(
+                self.processors[processor](train_df, thresholds)
+            )
 
     def process_splits(
         self,
-        processors: Iterable[
-            Literal["zero_variance", "missingness", "age_boundary"]
-        ],
+        processors: Iterable[Literal["zero_variance", "missingness", "age_boundary"]],
         thresholds: PostProcessingArguments,
     ) -> None:
         """Processes the splits by removing the features_to_drop from each
@@ -171,7 +174,7 @@ class PostProcess:
         """
         for split in self.project_info.feature_set_path.glob("*.parquet"):
             log.debug(f"Processing split {split}")
-            split_df = self._load_predictors_from_split(split)
+            split_df = self._load_split(split)
             split_df = split_df.drop(columns=self.features_to_drop)
             if "age_boundary" in processors:
                 split_df = self.processors["age_boundary"](split_df, thresholds)
@@ -181,9 +184,7 @@ class PostProcess:
 def post_process_splits(
     project_info: ProjectInfo,
     thresholds: PostProcessingArguments,
-    processors: Iterable[
-        Literal["zero_variance", "missingness", "age_boundary"]
-    ],
+    processors: Iterable[Literal["zero_variance", "missingness", "age_boundary"]],
 ) -> None:
     """Apply postprocessing to all splits.
 
