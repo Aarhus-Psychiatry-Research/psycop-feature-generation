@@ -273,12 +273,32 @@ def unpack_day_intervals(df,
     starttime_col = "datotid_start_sei"
     endtime_col = "datotid_slut_sei"
 
-    d = df[f"{endtime_col}"].sub(df[f"{starttime_col}"]).dt.days
+    df['uuid'
+            ] = df['dw_ek_borger'].astype(
+                str,
+            ) + df[
+                'datotid_start_sei'
+            ].dt.strftime(
+                "-%Y-%m-%d-%H-%M-%S",
+            )
+
+    df = df.dropna(subset="datotid_slut_sei")
+
+    d = df[endtime_col].sub(df[starttime_col]).dt.days + 1
     df1 = df.reindex(df.index.repeat(d))
-i = df1.groupby(level=0).cumcount() + 1
+    df1['day'] = df1.groupby(level=-1).cumcount() 
+    df1['date'] = [row['datotid_start_sei'] + pd.Timedelta(days=row['day']) for index, row in df1.iterrows()]
 
-df1['date'] = df1['date_start'] + pd.to_timedelta(i, unit='d')
+    #df1['days'] = df1['datotid_slut_sei'] + pd.to_timedelta(i, unit='d')
 
+    """
+    code from the internet:
+    d = df['date_end'].sub(df['date_start']).dt.days
+    df1 = df.reindex(df.index.repeat(d))
+    i = df1.groupby(level=0).cumcount() + 1
+
+    df1['date'] = df1['date_start'] + pd.to_timedelta(i, unit='d')
+    """
 
 
 def expand_adm_period(df: pd.DataFrame, 
