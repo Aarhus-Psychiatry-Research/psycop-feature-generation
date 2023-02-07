@@ -284,59 +284,20 @@ def unpack_day_intervals(df,
 
     df = df.dropna(subset="datotid_slut_sei")
 
-    d = df[endtime_col].sub(df[starttime_col]).dt.days + 1
-    df1 = df.reindex(df.index.repeat(d))
-    df1['day'] = df1.groupby(level=-1).cumcount() 
+
+    d = [len(pd.date_range(row['datotid_start_sei'].date(), row['datotid_slut_sei'].date())) for index, row in df.iterrows()]
+    df1 = df.reindex(df.index.repeat(d)
+    df1['day'] = df1.groupby(by='uuid').cumcount() 
     df1['date'] = [row['datotid_start_sei'] + pd.Timedelta(days=row['day']) for index, row in df1.iterrows()]
-
-    #df1['days'] = df1['datotid_slut_sei'] + pd.to_timedelta(i, unit='d')
-
-    """
-    code from the internet:
-    d = df['date_end'].sub(df['date_start']).dt.days
-    df1 = df.reindex(df.index.repeat(d))
-    i = df1.groupby(level=0).cumcount() + 1
-
-    df1['date'] = df1['date_start'] + pd.to_timedelta(i, unit='d')
-    """
-
-
-def expand_adm_period(df: pd.DataFrame, 
-    pred_time: , 
-    CPR: int):
-    """_summary_ SKB: fill this out
-
-    Args:
-        df_final (_type_): _description_
-        kon_id (int): _description_
-        CPR (int): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    # OBS: Here it is possible to change the timestamp of the day to where one would like to make the prediction
-    # We will do two versions:
-    # one predicting at 17.00
-    # one predicting at 06.00
-    pred_time = 6
-
-    # expand admission period to days + discharge day
-    days = pd.date_range(dfr.iloc[0,1].date(), dfr.iloc[0, 2].date())
-    days = pd.DataFrame(days).rename(columns={0: "days"})
-
 
     # add day-of-admission column
     days["admission_count_days"] = 0
     for day in time.index:
         time["admission_count_days"][day] = day + 1
 
+    # add time to day 
     for day in range(0, len(time)):
         time["period"][day] = time["period"][day].replace(hour=pred_time, minute=0)
-
-    time["datotid_start_indlaeg"] = kon_id
-
-    # join time period with df
-    temp_period = pd.merge(time, temp, how="left", on="datotid_start_indlaeg")
 
     # exclude admission start days where admission happens after prediction
     if temp_period.iloc[0, 2].time() > pd.Timestamp(2020, 1, 1, pred_time).time():
