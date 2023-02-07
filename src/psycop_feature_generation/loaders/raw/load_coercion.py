@@ -27,10 +27,11 @@ def coercion_duration(
     Returns:
         pd.DataFrame
     """
+
     coercion_discard = """('Døraflåsning', 'Personlig afskærmning over 24 timer', 'Koordinationsplan',
     'Udskrivningsaftale', 'Særlige dørlåse', 'Personlige alarm- og pejlesystemer', 'Andet' )"""
 
-    view = "[FOR_tvang_alt_hele_kohorten_inkl_2021]"
+    view = "[FOR_tvang_alt_hele_kohorten_inkl_2021_feb2022]"
 
     sql = f"SELECT dw_ek_borger, datotid_start_sei, datotid_slut_sei, varighed_timer_sei, typetekst_sei FROM [fct].{view} WHERE datotid_start_sei IS NOT NULL AND typetekst_sei NOT IN {coercion_discard}"
 
