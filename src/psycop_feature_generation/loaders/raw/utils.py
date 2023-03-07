@@ -265,87 +265,53 @@ def load_from_codes(
     )
 
 
-def unpack_day_intervals(df,
-    starttime_col: str, 
-    endtime_col: str,
-    ) -> pd.DataFrame:
+def unpack_time_intervals_to_days(
+    df: pd.DataFrame,
+    starttime_column: str = "datotid_start_sei",
+    endtime_column: str = "datotid_slut_sei",
+) -> pd.DataFrame:
 
-    starttime_col = "datotid_start_sei"
-    endtime_col = "datotid_slut_sei"
+    #### NB: WHAT TO DO WITH TIME OF DAY ##### -- missing info if we 'cut' the last date?
 
-    df['uuid'
-            ] = df['dw_ek_borger'].astype(
-                str,
-            ) + df[
-                'datotid_start_sei'
-            ].dt.strftime(
-                "-%Y-%m-%d-%H-%M-%S",
-            )
-
-    df = df.dropna(subset="datotid_slut_sei")
-
-    d = df[endtime_col].sub(df[starttime_col]).dt.days + 1
-    df1 = df.reindex(df.index.repeat(d))
-    df1['day'] = df1.groupby(level=-1).cumcount() 
-    df1['date'] = [row['datotid_start_sei'] + pd.Timedelta(days=row['day']) for index, row in df1.iterrows()]
-
-    #df1['days'] = df1['datotid_slut_sei'] + pd.to_timedelta(i, unit='d')
-
-    """
-    code from the internet:
-    d = df['date_end'].sub(df['date_start']).dt.days
-    df1 = df.reindex(df.index.repeat(d))
-    i = df1.groupby(level=0).cumcount() + 1
-
-    df1['date'] = df1['date_start'] + pd.to_timedelta(i, unit='d')
-    """
-
-
-def expand_adm_period(df: pd.DataFrame, 
-    pred_time: , 
-    CPR: int):
-    """_summary_ SKB: fill this out
+    """Transform df with starttime_column and endtime_column to day grain (one row per day in the interval starttime_column-endtime_column)
 
     Args:
-        df_final (_type_): _description_
-        kon_id (int): _description_
-        CPR (int): _description_
+        df (pd.DataFrame): dataframe with time interval in separate columns.
+        starttime_column (str, optional): Name of column with start time. Defaults to "datotid_start_sei".
+        endtime_column (str, optional): Name of column with end time. Defaults to "datotid_slut_slut".
 
     Returns:
-        _type_: _description_
+        pd.DataFrame: Dataframe with time interval unpacked to day grain.
+
     """
-    # OBS: Here it is possible to change the timestamp of the day to where one would like to make the prediction
-    # We will do two versions:
-    # one predicting at 17.00
-    # one predicting at 06.00
-    pred_time = 6
 
-    # expand admission period to days + discharge day
-    days = pd.date_range(dfr.iloc[0,1].date(), dfr.iloc[0, 2].date())
-    days = pd.DataFrame(days).rename(columns={0: "days"})
+    # for testing on coercion data
+    starttime_column = "datotid_start_sei"
+    endtime_column = "datotid_slut_sei"
 
+    # remove intervals that are either missing start or end time
+    df = df[(df[f"{starttime_column}"].notnull()) & (df[f"{endtime_column}"].notnull())]
 
-    # add day-of-admission column
-    days["admission_count_days"] = 0
-    for day in time.index:
-        time["admission_count_days"][day] = day + 1
+    # create a date range column between start_date and end_date for each visit_id
+    df["date_range"] = df.apply(
+        lambda x: pd.date_range(
+            start=x[f"{starttime_column}"], end=x[f"{endtime_column}"]
+        ),
+        axis=1,
+    )
 
-    for day in range(0, len(time)):
-        time["period"][day] = time["period"][day].replace(hour=pred_time, minute=0)
+    # df["date_range"] = [df.loc[row,"date_range"].append(pd.Index([df.loc[row,f"{endtime_column}"]])) for row in df.index] # if df.loc[row,f"{endtime_column}"] not in df.loc[row,"date_range"]]
 
-    time["datotid_start_indlaeg"] = kon_id
+    # explode the date range column to create a new row for each date in the range
+    new_df = df.explode("date_range")
 
-    # join time period with df
-    temp_period = pd.merge(time, temp, how="left", on="datotid_start_indlaeg")
+    # drop the date_range column and rename the exploded column to timestamp
+    new_df = new_df.drop("date_range", axis=1).rename(
+        columns={"date_range": "timestamp"}
+    )
 
-    # exclude admission start days where admission happens after prediction
-    if temp_period.iloc[0, 2].time() > pd.Timestamp(2020, 1, 1, pred_time).time():
-        temp_period = temp_period.iloc[1:, :]
+    # reset the index of the new dataframe
+    new_df = new_df.reset_index(drop=True)
 
-    # if admission is longer than 1 day
-    if len(temp_period) > 1:  # SKB: rewrite this to one if statement
-        # exclude admission end days where the admission ends before prediction
-        if temp_period.iat[-1, 4].time() < pd.Timestamp(2020, 1, 1, pred_time).time():
-            temp_period = temp_period.iloc[:-1, :]
-
-    return temp_period
+    # print the new dataframe
+    return new_df

@@ -31,9 +31,7 @@ def coercion_duration(
     coercion_discard = """('Døraflåsning', 'Personlig afskærmning over 24 timer', 'Koordinationsplan',
     'Udskrivningsaftale', 'Særlige dørlåse', 'Personlige alarm- og pejlesystemer', 'Andet' )"""
 
-    view = "[FOR_tvang_alt_hele_kohorten_inkl_2021_feb2022]"
-
-    sql = f"SELECT dw_ek_borger, datotid_start_sei, datotid_slut_sei, varighed_timer_sei, typetekst_sei FROM [fct].{view} WHERE datotid_start_sei IS NOT NULL AND typetekst_sei NOT IN {coercion_discard}"
+    sql = f"SELECT dw_ek_borger, datotid_start_sei, datotid_slut_sei, varighed_timer_sei, typetekst_sei FROM [fct].[FOR_tvang_alt_hele_kohorten_inkl_2021_feb2022] WHERE datotid_start_sei IS NOT NULL AND typetekst_sei NOT IN {coercion_discard}"
 
     if coercion_type and reason_for_coercion is None:
 
@@ -128,7 +126,7 @@ def farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-# Røde papir ved tvangsindlæggelse/tvangstilbageholdelse
+# Røde papirer ved tvangsindlæggelse/tvangstilbageholdelse
 @data_loaders.register("paa_grund_af_farlighed")
 def paa_grund_af_farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
@@ -137,7 +135,7 @@ def paa_grund_af_farlighed(n_rows: Optional[int] = None) -> pd.DataFrame:
     )
 
 
-# Gule papir ved tvangsindlæggelse/tvangstilbageholdelse
+# Gule papirer ved tvangsindlæggelse/tvangstilbageholdelse
 @data_loaders.register("af_helbredsmaessige_grunde")
 def af_helbredsmaessige_grunde(n_rows: Optional[int] = None) -> pd.DataFrame:
     return coercion_duration(
