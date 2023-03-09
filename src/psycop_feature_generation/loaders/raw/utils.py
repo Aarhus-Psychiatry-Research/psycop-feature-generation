@@ -25,9 +25,9 @@ def str_to_sql_match_logic(
         match_with_wildcard (bool): Whether to match on icd_code* / atc_code* or only icd_code / atc_code.
     """
     if load_diagnoses:
-        base_query = f"lower({code_sql_col_name}) LIKE '{code_to_match.lower()}"
-    else:
         base_query = f"lower({code_sql_col_name}) LIKE '%{code_to_match.lower()}"
+    else:
+        base_query = f"lower({code_sql_col_name}) LIKE '{code_to_match.lower()}"
 
     if match_with_wildcard:
         return f"{base_query}%'"
