@@ -265,64 +265,60 @@ def load_from_codes(
     )
 
 
-def unpack_time_intervals_to_days(
+def unpack_intervals_to_days(
     df: pd.DataFrame,
-    starttime_column: str = "datotid_start_sei",
-    endtime_column: str = "datotid_slut_sei",
+    starttime_col: str = "datotid_start_sei",
+    endtime_col: str = "timestamp",
 ) -> pd.DataFrame:
-
-    #### NB: WHAT TO DO WITH TIME OF DAY ##### -- missing info if we 'cut' the last date?
-
-    """Transform df with starttime_column and endtime_column to day grain (one row per day in the interval starttime_column-endtime_column)
+    """Transform df with starttime_col and endtime_col to day grain (one row per day in the interval starttime_col-endtime_col).
+    First and last day will have the specific start and end time, while days inbetween will be 00:00:00.
 
     Args:
         df (pd.DataFrame): dataframe with time interval in separate columns.
-        starttime_column (str, optional): Name of column with start time. Defaults to "datotid_start_sei".
-        endtime_column (str, optional): Name of column with end time. Defaults to "datotid_slut_slut".
+        starttime_col (str, optional): Name of column with start time. Defaults to "datotid_start_sei".
+        endtime_col (str, optional): Name of column with end time. Defaults to "datotid_slut_slut".
 
     Returns:
         pd.DataFrame: Dataframe with time interval unpacked to day grain.
 
     """
 
-    # for testing on coercion data
-    starttime_column = "datotid_start_sei"
-    endtime_column = "datotid_slut_sei"
+    # remove rows that are either missing start or end time
+    ##### do we lose rows we want to keep, if we drop these here? ######
+    df = df[(df[f"{starttime_col}"].notnull()) & (df[f"{endtime_col}"].notnull())]
 
-    # remove intervals that are either missing start or end time
-    df = df[(df[f"{starttime_column}"].notnull()) & (df[f"{endtime_column}"].notnull())]
+    # create rows with start and end time
+    df_start_rows, df_end_rows = df.copy(), df.copy()
+    df_start_rows["date_range"] = df_start_rows[f"{starttime_col}"]
+    df_end_rows["date_range"] = df_end_rows[f"{endtime_col}"]
 
-    # create a date range column between start_date and end_date for each visit_id
+    # create a date range column between start date and end date for each visit/admission/coercion instance
     df["date_range"] = df.apply(
         lambda x: pd.date_range(
-            start=x[f"{starttime_column}"].date(), end=x[f"{endtime_column}"].date()
+            start=x[f"{starttime_col}"].date() + pd.DateOffset(1),
+            end=x[f"{endtime_col}"].date(),
         ),
         axis=1,
     )
 
-    # df["date_range"] = [df.loc[row,"date_range"].append(pd.Index([df.loc[row,f"{endtime_column}"]])) for row in df.index] # if df.loc[row,f"{endtime_column}"] not in df.loc[row,"date_range"]]
-
     # explode the date range column to create a new row for each date in the range
-    new_df = df.explode("date_range1")
+    df = df.explode("date_range")
 
-    import datetime
+    # remove na's (produced when start date = end date)
+    df = df[df["date_range"].notnull()]
 
-    new_df["timestamp"] = [
-        pd.Timestamp(
-            datetime.datetime.combine(row["date_range1"].date(), row["start"].time())
-        )
-        if row["date_range1"].date() == row["start"].date()
-        else pd.Timestamp(row["date_range1"].date())
-        for idx, row in new_df.iterrows()
-    ]
-
-    # drop the date_range column and rename the exploded column to timestamp
-    new_df = new_df.drop("date_range", axis=1).rename(
-        columns={"date_range": "timestamp"}
+    # concat df with start and end time rows
+    df = pd.concat([df, df_start_rows, df_end_rows], ignore_index=True).sort_values(
+        ["dw_ek_borger", f"{starttime_col}", "date_range"]
     )
 
-    # reset the index of the new dataframe
-    new_df = new_df.reset_index(drop=True)
+    # drop duplicates (when start or end time = 00:00:00)
+    df = df.drop_duplicates(keep="first")
 
-    # print the new dataframe
-    return new_df
+    # reset index
+    df = df.reset_index(drop=True)
+
+    # set value to 0 (it has lost meaning now, since duration are repeated multiple times per visit/admission/coercion instance now)
+    df["value"] = 0
+
+    return df
