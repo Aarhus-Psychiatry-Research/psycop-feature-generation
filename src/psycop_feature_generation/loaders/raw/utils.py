@@ -283,10 +283,6 @@ def unpack_intervals_to_days(
 
     """
 
-    # remove rows that are either missing start or end time
-    ##### do we lose rows we want to keep, if we drop these here? ######
-    df = df[(df[f"{starttime_col}"].notnull()) & (df[f"{endtime_col}"].notnull())]
-
     # create rows with start and end time
     df_start_rows, df_end_rows = df.copy(), df.copy()
     df_start_rows["date_range"] = df_start_rows[f"{starttime_col}"]
@@ -318,7 +314,12 @@ def unpack_intervals_to_days(
     # reset index
     df = df.reset_index(drop=True)
 
-    # set value to 0 (it has lost meaning now, since duration are repeated multiple times per visit/admission/coercion instance now)
-    df["value"] = 0
+    # set value to 1 (duration has lost meaning now, since duration are repeated multiple times per visit/admission/coercion instance now)
+    df["value"] = 1
+
+    # only keep relevant columns and rename date_range to timestamp
+    df = df[["dw_ek_borger", "date_range", "value"]].rename(
+        columns={"date_range": "timestamp"}
+    )
 
     return df
