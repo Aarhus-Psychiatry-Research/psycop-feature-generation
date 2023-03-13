@@ -62,7 +62,7 @@ dev = [
 tests = [
     "pytest>=7.1.3,<7.2.3",
     "pytest-cov>=3.0.0,<4.0.1",
-    "pytest-xdist>=2.4.0,<3.2.1",
+    "pytest-xdist>=2.4.0,<3.2.2",
     "timeseriesflattener>=0.21.0",
 ]
 
