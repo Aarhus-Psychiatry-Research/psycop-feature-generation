@@ -54,7 +54,7 @@ def coercion_duration(
         "datotid_start_sei"
     ]
 
-    df.groupby())
+    df.groupby()
     # drop nas for coercion end times
     df = df.dropna(subset="datotid_slut_sei")
 
