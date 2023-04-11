@@ -35,7 +35,11 @@ def tfidf_preprocessing(
     n_rows: int = None,
     split_name=Literal["train", "val"],
 ) -> pd.DataFrame:
-    df_to_preprocess = load_text_split(text_sfi_names=text_sfi_names, n_rows=n_rows, split_name=split_name)
+    df_to_preprocess = load_text_split(
+        text_sfi_names=text_sfi_names,
+        n_rows=n_rows,
+        split_name=split_name,
+    )
 
     df_to_preprocess["text"] = convert_series_to_lower_case(df_to_preprocess["text"])
     df_to_preprocess["text"] = remove_symbols_from_series(df_to_preprocess["text"])
