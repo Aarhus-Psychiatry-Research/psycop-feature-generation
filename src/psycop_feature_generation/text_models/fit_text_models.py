@@ -1,14 +1,15 @@
 """Script for fitting text models"""
 
-import pandas as pd
 import pickle as pkl
-from pathlib import Path
-from typing import Any, List, Sequence
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from sklearn.decomposition import LatentDirichletAllocation
+from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
+import pandas as pd
 from psycop_feature_generation.loaders.raw.load_text import load_all_notes
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
 def load_txt_data(n_rows: int = None) -> list[str]:
@@ -23,7 +24,7 @@ def load_txt_data(n_rows: int = None) -> list[str]:
 
 def fit_bow(
     corpus: Sequence[str],
-    stop_words: List[str] = None,
+    stop_words: list[str] = None,
     ngram_range: tuple = (1, 1),
     max_df: float = 0.95,
     min_df: int = 2,
@@ -67,7 +68,7 @@ def fit_bow(
 
 def fit_tfidf(
     corpus: Sequence[str],
-    stop_words: List[str] = None,
+    stop_words: list[str] = None,
     ngram_range: tuple = (1, 1),
     max_df: float = 0.95,
     min_df: int = 2,
@@ -111,7 +112,7 @@ def fit_tfidf(
 
 def fit_lda(
     corpus: Sequence[str],
-    stop_words: List[str] = None,
+    stop_words: list[str] = None,
     ngram_range: tuple = (1, 1),
     max_df: float = 0.95,
     min_df: int = 2,
@@ -169,7 +170,7 @@ def fit_lda(
 
 
 def get_model_topics(
-    model: LatentDirichletAllocation, vectorizer: CountVectorizer, n_top_words: int = 10
+    model: LatentDirichletAllocation, vectorizer: CountVectorizer, n_top_words: int = 10,
 ) -> pd.DataFrame:
     """Get topics of LDA model
 
