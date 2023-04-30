@@ -59,7 +59,7 @@ def text_preprocessing_pipeline(
 
     write_df_to_sql(
         df,
-        table_name=f"psycop_{split_name}_all_sfis_all_years_preprocess",
+        table_name=f"psycop_{split_name}_all_sfis_all_years_preprocessed",
         if_exists="replace",
         rows_per_chunk=5000,
     )
