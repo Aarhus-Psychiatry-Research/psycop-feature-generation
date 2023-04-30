@@ -6,7 +6,6 @@ from psycop_feature_generation.loaders.raw.load_text import (
     get_valid_text_sfi_names,
     load_text_split,
 )
-from psycop_feature_generation.loaders.raw.sql_load import sql_load
 from psycop_feature_generation.text_models.utils import stop_words
 from psycop_ml_utils.sql.writer import write_df_to_sql
 
@@ -55,7 +54,7 @@ def text_preprocessing_pipeline(
     df = text_preprocessing(df)
 
     # save to sql
-    split_name="_".join(split_name) # type: ignore
+    split_name = "_".join(split_name)  # type: ignore
 
     write_df_to_sql(
         df,
