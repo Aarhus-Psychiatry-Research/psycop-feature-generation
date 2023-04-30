@@ -144,7 +144,7 @@ def load_text_sfis(
 
 
 def load_text_split(
-    text_sfi_names: str | list[str],
+    text_sfi_names: str | Iterable[str],
     split_name: list[Literal["train", "val"]],
     include_sfi_name: bool = False,
     n_rows: int | None = None,
@@ -174,7 +174,8 @@ def load_text_split(
         )
 
     else:
-        split_id_df = get_split_id_df(split_name=split_name)  # type: ignore
+        split_name = "".join(split_name)
+        split_id_df = get_split_id_df(split_name=split_name)
 
     text_split_df = filter_by_split_ids(
         df_to_split=text_df,
