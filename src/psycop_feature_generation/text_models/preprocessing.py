@@ -1,4 +1,5 @@
 import re
+from collections.abc import Sequence
 from typing import Literal, Optional
 
 import pandas as pd
@@ -30,14 +31,14 @@ def text_preprocessing(
     df[text_column_name] = (
         df[text_column_name]
         .str.lower()
-        .replace(regex_symbol_removal_and_stop_words, value="", regex=True)
+        .replace(regex_symbol_removal_and_stop_words, value="", regex=True)  # type: ignore
     )
 
     return df
 
 
 def text_preprocessing_pipeline(
-    split_name: list[Literal["train", "val"]] = ["train", "val"],
+    split_name: Sequence[Literal["train", "val"]] = ["train", "val"],
     n_rows: Optional[int] = None,
 ) -> None:
     """Pipeline for preprocessing all sfis from given splits. Filtering of which sfis to include in features happens in the loader."""

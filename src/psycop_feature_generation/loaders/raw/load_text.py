@@ -1,7 +1,7 @@
 """Load text data from sql warehouse."""
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from functools import partial
 from multiprocessing import Pool
 from typing import Literal
@@ -145,7 +145,7 @@ def load_text_sfis(
 
 def load_text_split(
     text_sfi_names: str | Iterable[str],
-    split_name: list[Literal["train", "val"]],
+    split_name: Sequence[Literal["train", "val"]],
     include_sfi_name: bool = False,
     n_rows: int | None = None,
 ) -> pd.DataFrame:
