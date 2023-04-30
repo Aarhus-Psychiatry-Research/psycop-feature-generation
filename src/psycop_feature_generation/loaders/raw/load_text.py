@@ -167,15 +167,9 @@ def load_text_split(
         n_rows=n_rows,
     )
 
-    # if multiple splits load and concat
-    if isinstance(split_name, list) and len(split_name) > 1:
-        split_id_df = pd.concat(
-            [get_split_id_df(split_name=split) for split in split_name],
-        )
-
-    else:
-        split_name = "".join(split_name)
-        split_id_df = get_split_id_df(split_name=split_name)
+    split_id_df = pd.concat(
+        [get_split_id_df(split_name=split) for split in split_name],
+    )
 
     text_split_df = filter_by_split_ids(
         df_to_split=text_df,
