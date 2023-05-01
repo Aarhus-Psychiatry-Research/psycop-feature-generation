@@ -2,7 +2,7 @@
 import logging
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 import pandas as pd
 from psycop_feature_generation.text_models.fit_text_models import fit_text_model
@@ -48,7 +48,7 @@ def text_model_pipeline(
     min_df: int = 1,
     max_features: Optional[int] = 100,
     save_path: str = "E:/shared_resources/text_models/",
-) -> str:
+) -> Union[str, None]:
     """Pipeline for fitting and saving a bag-of-words or tfidf model
 
     Args:
