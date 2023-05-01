@@ -11,6 +11,7 @@ from psycop_feature_generation.loaders.raw.load_text import (
 from psycop_feature_generation.text_models.utils import stop_words
 from psycop_feature_generation.utils import write_df_to_file
 
+
 def text_preprocessing(
     df: pd.DataFrame,
     text_column_name: str = "value",
