@@ -265,6 +265,5 @@ def load_preprocessed_sfis(
     return sql_load(
         query,
         database="USR_PS_FORSK",
-        chunksize=None,
         n_rows=n_rows,
-    )  # type: ignore
+    )
