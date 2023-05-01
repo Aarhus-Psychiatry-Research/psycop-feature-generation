@@ -1,5 +1,6 @@
 import re
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Literal, Optional
 
 import pandas as pd
@@ -8,8 +9,7 @@ from psycop_feature_generation.loaders.raw.load_text import (
     load_text_split,
 )
 from psycop_feature_generation.text_models.utils import stop_words
-from psycop_ml_utils.sql.writer import write_df_to_sql
-
+from psycop_feature_generation.utils import write_df_to_file
 
 def text_preprocessing(
     df: pd.DataFrame,
@@ -24,10 +24,18 @@ def text_preprocessing(
     Returns:
         pd.DataFrame: _description_
     """
+    # define regex for stop words by joining them with word boundary
+    regex_stop_words = r"\b%s" % r"\b|\b".join(stop_words)
+
+    # define regex that removes symbols (by keeping everything else)
+    regex_symbol_removal = r"[^ÆØÅæøåA-Za-z0-9 ]+"
+
+    # combine
     regex_symbol_removal_and_stop_words = re.compile(
-        r"[^ÆØÅæøåA-Za-z0-9 ]+|\b%s\b" % r"\b|\b".join(map(re.escape, stop_words)),
+        f"{regex_stop_words}|{regex_symbol_removal}",
     )
 
+    # lower case and remove stop words and symbols
     df[text_column_name] = (
         df[text_column_name]
         .str.lower()
@@ -38,7 +46,7 @@ def text_preprocessing(
 
 
 def text_preprocessing_pipeline(
-    split_name: Sequence[Literal["train", "val"]] = ["train", "val"],
+    split_names: Sequence[Literal["train", "val"]] = ["train", "val"],
     n_rows: Optional[int] = None,
 ) -> None:
     """Pipeline for preprocessing all sfis from given splits. Filtering of which sfis to include in features happens in the loader."""
@@ -46,7 +54,7 @@ def text_preprocessing_pipeline(
     # Load text from splits
     df = load_text_split(
         text_sfi_names=get_valid_text_sfi_names(),
-        split_name=split_name,
+        split_name=split_names,
         include_sfi_name=True,
         n_rows=n_rows,
     )
@@ -54,12 +62,12 @@ def text_preprocessing_pipeline(
     # preprocess
     df = text_preprocessing(df)
 
-    # save to sql
-    split_name = "_".join(split_name)  # type: ignore
+    # save to parquet
+    split_names = "_".join(split_names)  # type: ignore
 
-    write_df_to_sql(
-        df,
-        table_name=f"psycop_{split_name}_all_sfis_all_years_preprocessed",
-        if_exists="replace",
-        rows_per_chunk=5000,
+    write_df_to_file(
+        df=df,
+        file_path=Path(
+            f"E:/shared_resources/preprocessed_text/psycop_{split_names}_all_sfis_preprocessed.parquet",
+        ),
     )

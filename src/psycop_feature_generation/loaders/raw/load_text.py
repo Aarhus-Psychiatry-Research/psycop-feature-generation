@@ -238,7 +238,7 @@ def load_arbitrary_notes(
 
 @data_loaders.register("preprocessed_sfis")
 def load_preprocessed_sfis(
-    text_sfi_names: str | list[str] | set[str] | None = None,
+    text_sfi_names: Iterable[str] | None = None,
     view: str = "psycop_train_val_all_sfis_all_years_lowercase_stopwords_and_symbols_removed",
     n_rows: int | None = None,
 ) -> pd.DataFrame:
@@ -255,10 +255,10 @@ def load_preprocessed_sfis(
     """
 
     if text_sfi_names is None:
-        text_sfi_names = get_valid_text_sfi_names()
+        text_sfi_names = get_valid_text_sfi_names()  # type: ignore
 
-    if isinstance(text_sfi_names, (list, set)):
-        text_sfi_names = "', '".join(text_sfi_names)
+    # join text_sfi_names and transform to str
+    text_sfi_names = "', '".join(text_sfi_names)
 
     query = f"SELECT dw_ek_borger, timestamp, text, overskrift FROM [fct].[{view}] WHERE overskrift IN ('{text_sfi_names}')"
 

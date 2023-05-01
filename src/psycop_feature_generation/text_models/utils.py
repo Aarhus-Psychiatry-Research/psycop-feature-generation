@@ -69,7 +69,7 @@ at
 bag
 bare
 begge
-bl.a.
+bla
 blandt
 blev
 blive
@@ -80,7 +80,7 @@ brug
 burde
 både
 bør
-ca.
+ca
 da
 dag
 de
@@ -128,7 +128,7 @@ ens
 enten
 er
 et
-f.eks.
+feks
 faktisk
 far
 fat
