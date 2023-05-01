@@ -67,7 +67,7 @@ def text_model_pipeline(
     # create model filename from params
     filename = create_model_filename(
         model=model,
-        corpu_name=corpus_name,
+        corpus_name=corpus_name,
         sfi_type=sfi_type,
         ngram_range=ngram_range,
         max_df=max_df,
