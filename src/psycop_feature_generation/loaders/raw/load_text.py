@@ -238,32 +238,33 @@ def load_arbitrary_notes(
 
 @data_loaders.register("preprocessed_sfis")
 def load_preprocessed_sfis(
-    text_sfi_names: Iterable[str] | None = None,
-    view: str = "psycop_train_val_all_sfis_all_years_lowercase_stopwords_and_symbols_removed",
-    n_rows: int | None = None,
+    text_sfi_names: set[str] | None = None,
+    corpus_name: str = "psycop_train_val_all_sfis_preprocessed",
 ) -> pd.DataFrame:
     """Returns preprocessed sfis from preprocessed view/SQL table that includes the "overskrift" column.
     Preprocessed views are created using the function text_preprocessing_pipeline under text_models/preprocessing.
 
     Args:
         text_sfi_names (str | list[str] | set[str] | None): Sfis to include.  Defaults to None, which includes all sfis.
-        view (str | None, optional): SQL table with preprocessed sfis. Defaults to "psycop_train_val_all_sfis_all_years_lowercase_stopwords_and_symbols_removed".
+        corpus_name (str, optional): Name of parquet with preprocessed sfis. Defaults to "psycop_train_val_all_sfis_preprocessed".
         n_rows (int | None, optional): Number of rows to include. Defaults to None, which includes all rows.
 
     Returns:
         pd.DataFrame: Preprocessed sfis from preprocessed view/SQL table.
     """
 
-    if text_sfi_names is None:
-        text_sfi_names = get_valid_text_sfi_names()  # type: ignore
+    # load corpus
+    # if not text_sfi_names, include all sfis
+    if not text_sfi_names:
+        corpus = pd.read_parquet(
+            path=f"E:/shared_resources/preprocessed_text/{corpus_name}.parquet",
+        )
+    # if text_sfi_names, include only chosen sfis
+    else:
+        filter_list = [[("overskrift", "=", f"{sfi}")] for sfi in text_sfi_names]
+        corpus = pd.read_parquet(
+            path=f"E:/shared_resources/preprocessed_text/{corpus_name}.parquet",
+            filters=filter_list,
+        )
 
-    # join text_sfi_names and transform to str
-    text_sfi_names = "', '".join(text_sfi_names)
-
-    query = f"SELECT dw_ek_borger, timestamp, text, overskrift FROM [fct].[{view}] WHERE overskrift IN ('{text_sfi_names}')"
-
-    return sql_load(
-        query,
-        database="USR_PS_FORSK",
-        n_rows=n_rows,
-    )
+    return corpus
