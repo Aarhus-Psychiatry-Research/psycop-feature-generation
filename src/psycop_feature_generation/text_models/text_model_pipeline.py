@@ -109,4 +109,6 @@ def text_model_pipeline(
     # save model to dir
     save_text_model_to_dir(model=vec, save_path=save_path, filename=filename)
 
-    return f"Text model fitted and saved as {save_path}/{filename}"
+    print(f"Text model fitted and saved as {save_path}/{filename}")
+
+    return save_path
