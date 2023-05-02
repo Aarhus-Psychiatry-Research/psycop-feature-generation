@@ -25,8 +25,11 @@ def text_preprocessing(
     Returns:
         pd.DataFrame: Df with preprocessed text
     """
-    # define regex for stop words by joining them with word boundary
-    regex_stop_words = r"\b%s" % r"\b|\b".join(stop_words)
+    # define regex for stop words with empty string in beginning and end
+    regex_stop_words_surrounded_by_empty_strings = [
+        rf"\b{stop_word}\b" for stop_word in stop_words
+    ]
+    regex_stop_words = "|".join(regex_stop_words_surrounded_by_empty_strings)
 
     # define regex that removes symbols (by keeping everything else)
     regex_symbol_removal = r"[^ÆØÅæøåA-Za-z0-9 ]+"
