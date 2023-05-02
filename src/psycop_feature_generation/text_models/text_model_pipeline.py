@@ -34,7 +34,7 @@ def create_model_filename(
     """
     max_df_str = str(max_df).replace(".", "")
     ngram_range_str = "".join(c for c in str(ngram_range) if c.isdigit())
-    sfi_type_str = "All_sfis" if not sfi_type else "".join(sfi_type).replace(" ", "")
+    sfi_type_str = "all_sfis" if not sfi_type else "".join(sfi_type).replace(" ", "")
 
     return f"{model}_{corpus_name}_sfi_type_{sfi_type_str}_ngram_range_{ngram_range_str}_max_df_{max_df_str}_min_df_{min_df}_max_features_{max_features}.pkl"
 
